@@ -1,0 +1,760 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>堆疊與佇列教室</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: 頂端導覽列 + 單欄教學面板；每個面板 = 說明 → 可操作的圖 → 訊息列 → C 程式碼 */
+:root{
+  --bg:#f5f7fb; --surface:#ffffff; --ink:#16202e; --muted:#566377; --line:#d5dce8;
+  --accent:#2347d8; --accent-soft:#e3e9fc; --on-accent:#ffffff;
+  --hot:#b84d06; --hot-soft:#fcebdb; --on-hot:#ffffff;
+  --good:#12765a; --good-soft:#d9f2e8; --bad:#b3261e; --bad-soft:#fbe2e0; --code-bg:#edf1f8;
+  --font:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1420; --surface:#161e2d; --ink:#e6ebf4; --muted:#95a2b6; --line:#2b3649;
+  --accent:#86a0ff; --accent-soft:#1d2a54; --on-accent:#0e1420;
+  --hot:#ffa561; --hot-soft:#3a2614; --on-hot:#1a1006;
+  --good:#4fd1a3; --good-soft:#123428; --bad:#ff8f85; --bad-soft:#3b1a18; --code-bg:#111a29; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1420; --surface:#161e2d; --ink:#e6ebf4; --muted:#95a2b6; --line:#2b3649;
+  --accent:#86a0ff; --accent-soft:#1d2a54; --on-accent:#0e1420;
+  --hot:#ffa561; --hot-soft:#3a2614; --on-hot:#1a1006;
+  --good:#4fd1a3; --good-soft:#123428; --bad:#ff8f85; --bad-soft:#3b1a18; --code-bg:#111a29; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.7;
+  padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:26px;line-height:1.3;margin:0 0 4px;text-wrap:balance}
+h2{font-size:20px;margin:0 0 6px;text-wrap:balance}
+h3{font-size:16px;margin:0 0 6px}
+h4{font-size:12px;letter-spacing:.08em;color:var(--muted);margin:0 0 6px;font-weight:700}
+p{margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 16px}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;border-bottom:1px solid var(--line);scrollbar-width:thin}
+nav.tabs a{flex:none;padding:6px 12px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:500;border:1px solid transparent;white-space:nowrap}
+nav.tabs a:hover{color:var(--ink)}
+nav.tabs a[aria-current="page"]{background:var(--accent);color:var(--on-accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel[hidden]{display:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.btn{font:inherit;font-weight:500;padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:disabled{opacity:.45;cursor:default}
+input[type=text],input[type=number],select{font:inherit;font-family:var(--mono);padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0}
+input.grow{flex:1 1 200px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{font-family:var(--mono);font-size:13px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.msg{border-left:4px solid var(--accent);background:var(--accent-soft);padding:10px 12px;border-radius:0 8px 8px 0;margin:10px 0;min-height:3em}
+.msg.bad{border-color:var(--bad);background:var(--bad-soft)}
+.msg.good{border-color:var(--good);background:var(--good-soft)}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.badge{font-family:var(--mono);font-size:13px;padding:2px 9px;border-radius:6px;background:var(--code-bg);border:1px solid var(--line)}
+.badge.yes{background:var(--hot-soft);border-color:var(--hot);color:var(--hot)}
+pre.code{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:10px 0;margin:10px 0 0;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65}
+pre.code .ln{display:block;white-space:pre;padding:0 12px;border-left:3px solid transparent}
+pre.code .ln.hl{background:var(--hot-soft);border-left-color:var(--hot)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:640px){.cols{grid-template-columns:minmax(0,1fr)}}
+
+/* cells */
+.cell{height:44px;border:1.5px solid var(--line);border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-weight:700;background:var(--surface);min-width:0}
+.cell.on{background:var(--accent-soft);border-color:var(--accent)}
+.cell.gone{color:var(--muted);border-style:dashed;font-weight:500;opacity:.7}
+.cell.nil{border-style:dashed;color:var(--muted);font-size:12px;font-weight:500;background:transparent}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:0 6px;border-radius:4px;line-height:1.6}
+.tag.t,.tag.f{background:var(--accent);color:var(--on-accent)}
+.tag.r{background:var(--hot);color:var(--on-hot)}
+.idx{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center}
+.scol{display:flex;flex-direction:column;gap:4px;max-width:300px}
+.srow{display:grid;grid-template-columns:28px minmax(0,1fr) 84px;gap:8px;align-items:center}
+.qgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:start}
+.qcol{display:flex;flex-direction:column;gap:4px;align-items:stretch;min-width:0}
+.qcol .tags{display:flex;flex-direction:column;gap:2px;align-items:center;min-height:42px}
+.hrow{display:flex;flex-wrap:wrap;gap:6px;min-height:40px;align-items:center;padding:6px;border:1px dashed var(--line);border-radius:8px}
+.tok{font-family:var(--mono);font-weight:700;min-width:36px;height:36px;padding:0 8px;display:inline-grid;place-items:center;border-radius:6px;border:1.5px solid var(--line);background:var(--surface)}
+.tok.done{opacity:.4}
+.tok.cur{border-color:var(--hot);background:var(--hot-soft);color:var(--hot)}
+.tok.top{border-color:var(--accent);background:var(--accent-soft)}
+.empty{color:var(--muted);font-size:13px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--code-bg);font-size:13px}
+td code,li code,p code{font-family:var(--mono);font-size:13px;background:var(--code-bg);padding:0 4px;border-radius:4px}
+ul.pts{margin:0;padding-left:20px}ul.pts li{margin-bottom:6px}
+/* ring */
+svg.ring{width:100%;max-width:340px;height:auto;display:block;margin:0 auto}
+svg .s-slot{fill:var(--surface);stroke:var(--line);stroke-width:2}
+svg .s-data{fill:var(--accent-soft);stroke:var(--accent)}
+svg .s-gone{stroke-dasharray:4 3}
+svg .s-res{fill:var(--bad-soft);stroke:var(--bad);stroke-dasharray:4 3}
+svg text{font-family:var(--mono);fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+svg .t-idx{fill:var(--muted);font-size:12px}
+svg .t-f{fill:var(--accent);font-size:12px;font-weight:700}
+svg .t-r{fill:var(--hot);font-size:12px;font-weight:700}
+svg .t-v{font-size:16px;font-weight:700}
+svg .t-c{fill:var(--muted);font-size:12px}
+/* maze */
+.maze{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;max-width:330px}
+.mc{aspect-ratio:1;border-radius:6px;display:grid;place-items:center;font-size:12px;font-family:var(--mono);background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.mc.w{background:var(--ink);border-color:var(--ink);opacity:.85}
+.mc.dead{background:var(--bad-soft);border-color:var(--bad)}
+.mc.path{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.mc.cur{background:var(--hot);border-color:var(--hot);color:var(--on-hot);font-weight:700}
+.mc.ex{outline:2px solid var(--good);outline-offset:-2px;color:var(--good);font-weight:700}
+/* quiz */
+.opt{display:block;width:100%;text-align:left;margin:6px 0}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.prog{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-bottom:12px}
+.prog i{display:block;height:100%;background:var(--accent)}
+.perm{font-family:var(--mono);font-size:13px;padding:3px 9px;border-radius:6px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.perm.ok{border-color:var(--good);background:var(--good-soft)}
+.perm.no{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.legend{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.cell,.tok,.mc{transition:background .2s,border-color .2s}}
+</style>
+
+<div class="wrap">
+  <h1>堆疊與佇列教室</h1>
+  <p class="sub">Chapter 5 的重點，用按鈕自己操作一遍。先玩，再看底下的 C 程式碼。</p>
+  <nav class="tabs" id="tabs" aria-label="章節"></nav>
+
+  <!-- 重點總覽 -->
+  <section class="panel" id="p-overview" hidden>
+    <div class="card">
+      <h2>先看這張表</h2>
+      <p>考試最常出的，就是每種結構「空」「滿」「加入」「刪除」的寫法。右邊四個條件背起來，其他都是延伸。</p>
+      <div class="tbl"><table>
+        <tr><th>結構</th><th>空</th><th>滿</th><th>加入</th><th>刪除</th></tr>
+        <tr><td>陣列堆疊</td><td><code>top == -1</code></td><td><code>top == MAX-1</code></td><td><code>top++; s[top]=v</code></td><td><code>return s[top--]</code></td></tr>
+        <tr><td>直線佇列</td><td><code>front == rear</code></td><td><code>rear == MAX-1</code></td><td><code>q[++rear]=v</code></td><td><code>return q[++front]</code></td></tr>
+        <tr><td>環狀佇列</td><td><code>front == rear</code></td><td><code>(rear+1)%MAX == front</code></td><td><code>rear=(rear+1)%MAX; q[rear]=v</code></td><td><code>front=(front+1)%MAX; return q[front]</code></td></tr>
+        <tr><td>鏈結堆疊</td><td><code>top == NULL</code></td><td>無（除非記憶體不夠）</td><td>新節點 <code>next=top; top=new</code></td><td><code>temp=top; top=top-&gt;next; free(temp)</code></td></tr>
+        <tr><td>鏈結佇列</td><td><code>front == NULL</code></td><td>無</td><td><code>rear-&gt;next=new; rear=new</code>（空的時候 <code>front=rear=new</code>）</td><td><code>front=front-&gt;next</code>，刪到空要 <code>rear=NULL</code></td></tr>
+      </table></div>
+    </div>
+    <div class="card">
+      <h2>最容易失分的六件事</h2>
+      <ul class="pts">
+        <li><b>後序求值</b>：先 pop 出來的是<b>右</b>運算元。減法和除法最容易算反。</li>
+        <li><b>前序求值</b>：從右往左掃，先 pop 出來的是<b>左</b>運算元，剛好相反。</li>
+        <li><b>中序轉後序</b>：比較 <code>ISP(堆疊內) ≥ ICP(新進)</code>。相等也要先輸出，所以同優先權由左算到右。</li>
+        <li><b>環狀佇列</b>：空和滿的條件相同，所以要空一格，最多只能放 <code>MAX-1</code> 筆。</li>
+        <li><b>鏈結佇列</b>：刪掉最後一個節點後，<code>rear</code> 也要設成 <code>NULL</code>。</li>
+        <li><b>top / front 的定義</b>：題目沒說就照課本。top 指向最上面那筆資料；front 指向第一筆資料的前一格。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>建議的學習順序</h2>
+      <p>堆疊 → 直線佇列 → 環狀佇列 → 中序轉後序 → 運算式求值 → 迷宮回溯 → 合法出入序列 → 小測驗。</p>
+      <p class="legend">內容整理自你上傳的 Chapter 5 簡報。ISP / ICP 的數字是課本常見設定，考試請以你們課本的表格為準，重點是大小關係。</p>
+    </div>
+  </section>
+
+  <!-- 堆疊 -->
+  <section class="panel" id="p-stack" hidden>
+    <div class="card">
+      <h2>堆疊 Stack：後進先出（LIFO）</h2>
+      <p>只有一個出入口，叫 <b>top</b>。資料從頂端放進去，也從頂端拿出來。像一疊盤子，最後放上去的最先拿走。</p>
+      <div class="row">
+        <input type="number" id="st-val" value="5" style="width:90px" aria-label="要 push 的值">
+        <button class="btn primary" id="st-push">push</button>
+        <button class="btn" id="st-pop">pop</button>
+        <button class="btn" id="st-peek">peek</button>
+        <button class="btn" id="st-reset">重設</button>
+      </div>
+      <div class="cols">
+        <div><h4>陣列（MAX = 6，下面是 index 0）</h4><div class="scol" id="st-view"></div></div>
+        <div>
+          <h4>狀態</h4>
+          <div class="badges" id="st-badges"></div>
+          <div class="msg" id="st-msg" aria-live="polite">按 push 試試看。</div>
+          <p class="legend">pop 之後，那格的舊資料其實還留在陣列裡（淡色），只是 top 已經不指向它，邏輯上等於刪除了。</p>
+        </div>
+      </div>
+      <pre class="code" id="st-code"></pre>
+    </div>
+  </section>
+
+  <!-- 直線佇列 -->
+  <section class="panel" id="p-queue" hidden>
+    <div class="card">
+      <h2>佇列 Queue：先進先出（FIFO）</h2>
+      <p>從 <b>rear</b> 加入，從 <b>front</b> 取出。<b>front 指在第一筆資料的前一格</b>，所以空佇列時 front 和 rear 都是 -1。</p>
+      <div class="row">
+        <input type="number" id="q-val" value="5" style="width:90px" aria-label="要 add 的值">
+        <button class="btn primary" id="q-add">add</button>
+        <button class="btn" id="q-del">delete</button>
+        <button class="btn" id="q-peek">peek</button>
+        <button class="btn" id="q-reset">重設</button>
+        <button class="btn" id="q-demo">示範：空間用光了</button>
+      </div>
+      <div class="qgrid" id="q-view"></div>
+      <div class="badges" id="q-badges"></div>
+      <div class="msg" id="q-msg" aria-live="polite">按 add 試試看。</div>
+      <p class="legend">虛線淡色的格子是已經被 delete 的資料。直線佇列的 front 和 rear 只會往右走，這些格子永遠用不回來。</p>
+      <pre class="code" id="q-code"></pre>
+    </div>
+  </section>
+
+  <!-- 環狀佇列 -->
+  <section class="panel" id="p-ring" hidden>
+    <div class="card">
+      <h2>環狀佇列：用 mod 讓指標繞回來</h2>
+      <p>把陣列頭尾接起來，rear 走到最後一格後可以回到 0 繼續用。代價是要<b>永遠空一格</b>（紅色虛線那格），最多放 <code>MAX-1</code> 筆。</p>
+      <div class="row">
+        <input type="number" id="r-val" value="5" style="width:90px" aria-label="要 add 的值">
+        <button class="btn primary" id="r-add">add</button>
+        <button class="btn" id="r-del">delete</button>
+        <button class="btn" id="r-reset">重設</button>
+        <button class="btn" id="r-demo">示範：繞一圈</button>
+      </div>
+      <div class="cols">
+        <div><svg class="ring" id="r-svg" viewBox="0 0 340 340" role="img" aria-label="環狀佇列示意圖"></svg></div>
+        <div>
+          <div class="badges" id="r-badges"></div>
+          <div class="msg" id="r-msg" aria-live="polite">按 add 試試看。</div>
+          <p class="legend">front 起始值是 -1，等同環上的最後一格（-1 ≡ 5 mod 6），所以圖上會畫在 5 的位置。</p>
+        </div>
+      </div>
+      <pre class="code" id="r-code"></pre>
+      <p class="legend">簡報 slide 77 先把 rear 加 1 再比較 front == rear，寫成程式時，發現已滿要記得把 rear 還原。圖上的寫法是先算 next 再比較，結果相同。</p>
+    </div>
+  </section>
+
+  <!-- 中序轉後序 -->
+  <section class="panel" id="p-postfix" hidden>
+    <div class="card">
+      <h2>中序轉後序：一步一步看堆疊</h2>
+      <p>運算元直接輸出。運算子拿 <b>ICP（新進）</b>去比 <b>ISP（堆疊頂端）</b>：ISP ≥ ICP 就先彈出輸出，直到不能彈，再 push 新的。</p>
+      <div class="row">
+        <input type="text" id="cv-in" class="grow" value="5+(3*4)-9" aria-label="中序運算式" autocomplete="off" spellcheck="false">
+        <button class="btn primary" id="cv-go">轉換</button>
+      </div>
+      <div class="chips" id="cv-presets"></div>
+      <h4>詞元（正在讀的會變橘色）</h4>
+      <div class="hrow" id="cv-tokens"></div>
+      <div class="cols" style="margin-top:10px">
+        <div><h4>堆疊（左邊是底，右邊是頂）</h4><div class="hrow" id="cv-stack"></div></div>
+        <div><h4>輸出（後序式）</h4><div class="hrow" id="cv-out"></div></div>
+      </div>
+      <div class="msg" id="cv-msg" aria-live="polite"></div>
+      <div class="row">
+        <button class="btn" id="cv-prev">◀ 上一步</button>
+        <button class="btn primary" id="cv-next">下一步 ▶</button>
+        <button class="btn" id="cv-play">▶ 自動播放</button>
+        <button class="btn" id="cv-reset">重設</button>
+        <span class="legend" id="cv-count"></span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>優先權表</h3>
+      <div class="tbl"><table>
+        <tr><th>詞元</th><th>ISP（在堆疊內）</th><th>ICP（新進來）</th></tr>
+        <tr><td><code>(</code></td><td>0</td><td>20</td></tr>
+        <tr><td><code>+</code> <code>-</code></td><td>12</td><td>12</td></tr>
+        <tr><td><code>*</code> <code>/</code> <code>%</code></td><td>13</td><td>13</td></tr>
+        <tr><td><code>^</code> <code>$</code>（次方）</td><td>14</td><td>15</td></tr>
+      </table></div>
+      <p class="legend" style="margin-top:8px">左括號進來時優先權最高（一定 push），放進去後最低（誰都不能把它彈出，只有 <code>)</code> 能）。次方的 ICP 比 ISP 大，所以連續次方由右往左算。</p>
+    </div>
+  </section>
+
+  <!-- 求值 -->
+  <section class="panel" id="p-eval" hidden>
+    <div class="card">
+      <h2>運算式求值：數字 push，運算子 pop 兩個</h2>
+      <div class="row">
+        <label><input type="radio" name="ev-mode" value="post" checked> 後序（由左往右）</label>
+        <label><input type="radio" name="ev-mode" value="pre"> 前序（由右往左）</label>
+      </div>
+      <div class="row">
+        <input type="text" id="ev-in" class="grow" value="5 3 4 * + 9 -" aria-label="運算式，詞元之間用空格" autocomplete="off" spellcheck="false">
+        <button class="btn primary" id="ev-go">開始</button>
+      </div>
+      <div class="chips" id="ev-presets"></div>
+      <h4>詞元（詞元之間要空格）</h4>
+      <div class="hrow" id="ev-tokens"></div>
+      <h4 style="margin-top:10px">堆疊（左邊是底，右邊是頂）</h4>
+      <div class="hrow" id="ev-stack"></div>
+      <div class="msg" id="ev-msg" aria-live="polite"></div>
+      <div class="row">
+        <button class="btn" id="ev-prev">◀ 上一步</button>
+        <button class="btn primary" id="ev-next">下一步 ▶</button>
+        <button class="btn" id="ev-play">▶ 自動播放</button>
+        <button class="btn" id="ev-reset">重設</button>
+        <span class="legend" id="ev-count"></span>
+      </div>
+      <p class="legend">口訣：後序「先出右、後出左」；前序「先出左、後出右」。<code>$</code> 與 <code>^</code> 都當次方。</p>
+    </div>
+  </section>
+
+  <!-- 迷宮 -->
+  <section class="panel" id="p-maze" hidden>
+    <div class="card">
+      <h2>迷宮與回溯 backtracking</h2>
+      <p>0 可以走，1 是牆。每到一個位置，依「上、右、下、左」（0、1、2、3）測試。可以走的方向全部 push 進堆疊，再 pop 一個前進。走到死路就 pop 回上一個路口，改走堆疊裡留著的方向。</p>
+      <div class="cols">
+        <div>
+          <div class="maze" id="mz-grid"></div>
+          <p class="legend" style="margin-top:8px">橘色＝目前位置，藍色＝目前這條路，紅色＝走過但是死路，綠框＝出口 A[4,5]，入口 A[1,0]。</p>
+        </div>
+        <div>
+          <h4>堆疊（最上面是下一個會 pop 的）</h4>
+          <div class="scol" id="mz-stack" style="max-width:none"></div>
+        </div>
+      </div>
+      <div class="msg" id="mz-msg" aria-live="polite"></div>
+      <div class="row">
+        <button class="btn primary" id="mz-next">下一步 ▶</button>
+        <button class="btn" id="mz-play">▶ 自動播放</button>
+        <button class="btn" id="mz-reset">重設</button>
+        <span class="legend" id="mz-count"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 合法序列 -->
+  <section class="panel" id="p-valid" hidden>
+    <div class="card">
+      <h2>合法的堆疊出入序列</h2>
+      <p>輸入順序固定是 1, 2, 3…，中間可以任意穿插 push 與 pop。問：輸出順序可能是 3 1 2 嗎？下面可以自己驗證。</p>
+      <div class="row">
+        <label>輸入 1 到 <select id="vl-n"><option>3</option><option selected>4</option><option>5</option></select></label>
+        <input type="text" id="vl-out" class="grow" value="3 1 2 4" aria-label="輸出順序" autocomplete="off" spellcheck="false">
+        <button class="btn primary" id="vl-go">檢查</button>
+      </div>
+      <div class="msg" id="vl-msg" aria-live="polite"></div>
+      <h4>操作過程</h4>
+      <div class="hrow" id="vl-ops"></div>
+      <h4 style="margin-top:12px">所有排列（點一下帶入上面檢查）<span id="vl-count" class="legend"></span></h4>
+      <div class="chips" id="vl-all"></div>
+      <p class="legend">判斷小技巧：輸出序列裡只要出現「大 小 中」的樣子（例如 3 1 2），就不合法。因為 3 先出來時，1 和 2 還壓在堆疊裡，2 在上面，必定先於 1 出來。</p>
+    </div>
+  </section>
+
+  <!-- 小測驗 -->
+  <section class="panel" id="p-quiz" hidden>
+    <div class="card" id="qz"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const stops=[];
+function makePlayer(btn,canNext,next,ms){
+  let t=null;
+  const stop=()=>{ if(t){clearInterval(t);t=null;} btn.textContent='▶ 自動播放'; };
+  btn.addEventListener('click',()=>{
+    if(t){stop();return;}
+    if(!canNext())return;
+    btn.textContent='⏸ 暫停';
+    t=setInterval(()=>{ if(!canNext()){stop();return;} next(); if(!canNext())stop(); },ms||1000);
+  });
+  stops.push(stop); return stop;
+}
+function codeHTML(lines){return lines.map((l,i)=>`<span class="ln" data-i="${i}">${esc(l)}</span>`).join('');}
+function hl(id,idx){ document.querySelectorAll('#'+id+' .ln').forEach(n=>n.classList.toggle('hl',idx.indexOf(+n.dataset.i)>=0)); }
+function setMsg(id,html,kind){ const m=$('#'+id); m.className='msg'+(kind?' '+kind:''); m.innerHTML=html; }
+const rnd=()=>1+Math.floor(Math.random()*99);
+function readVal(id){ const el=$('#'+id); const v=parseInt(el.value,10); return isNaN(v)?rnd():v; }
+
+/* ---------- 導覽 ---------- */
+const TABS=[['overview','重點總覽'],['stack','堆疊'],['queue','直線佇列'],['ring','環狀佇列'],['postfix','中序轉後序'],['eval','運算式求值'],['maze','迷宮回溯'],['valid','合法序列'],['quiz','小測驗']];
+$('#tabs').innerHTML=TABS.map(t=>`<a href="#${t[0]}" data-t="${t[0]}">${t[1]}</a>`).join('');
+function route(){
+  const h=(location.hash||'#overview').slice(1);
+  const key=TABS.some(t=>t[0]===h)?h:'overview';
+  stops.forEach(f=>f());
+  TABS.forEach(t=>{ $('#p-'+t[0]).hidden=t[0]!==key; });
+  document.querySelectorAll('#tabs a').forEach(a=>{ if(a.dataset.t===key)a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+}
+window.addEventListener('hashchange',route);
+
+/* ---------- 堆疊 ---------- */
+(function(){
+  const MAX=6; let arr, top;
+  const CODE=['void push(int v) {','  if (top == MAX-1) { /* 滿 */ }','  else { top++; stack[top] = v; }','}','int pop() {','  if (top == -1) { /* 空 */ }','  else return stack[top--];','}'];
+  $('#st-code').innerHTML=codeHTML(CODE);
+  function reset(){ arr=Array(MAX).fill(null); top=-1; render(); hl('st-code',[]); setMsg('st-msg','按 push 試試看。'); }
+  function render(){
+    let h='';
+    for(let i=MAX-1;i>=0;i--){
+      const on=arr[i]!==null&&i<=top, gone=arr[i]!==null&&i>top;
+      h+=`<div class="srow"><span class="idx">${i}</span><div class="cell ${on?'on':''} ${gone?'gone':''}">${arr[i]===null?'':arr[i]}</div><span>${i===top?'<span class="tag t">◀ top</span>':''}</span></div>`;
+    }
+    h+=`<div class="srow"><span class="idx">-1</span><div class="cell nil">空堆疊</div><span>${top===-1?'<span class="tag t">◀ top</span>':''}</span></div>`;
+    $('#st-view').innerHTML=h;
+    $('#st-badges').innerHTML=`<span class="badge">top = ${top}</span><span class="badge ${top===-1?'yes':''}">is_empty: ${top===-1}</span><span class="badge ${top===MAX-1?'yes':''}">is_full: ${top===MAX-1}</span>`;
+  }
+  $('#st-push').onclick=()=>{
+    const v=readVal('st-val');
+    if(top===MAX-1){ hl('st-code',[1]); setMsg('st-msg',`top == MAX-1（${top}），堆疊已滿，不能 push。`,'bad'); return; }
+    top++; arr[top]=v; render(); hl('st-code',[2]);
+    setMsg('st-msg',`<b>push(${v})</b>：top 先加 1 變成 ${top}，再把 ${v} 放進 stack[${top}]。`);
+    $('#st-val').value=rnd();
+  };
+  $('#st-pop').onclick=()=>{
+    if(top===-1){ hl('st-code',[5]); setMsg('st-msg','top == -1，堆疊是空的，不能 pop。','bad'); return; }
+    const v=arr[top]; top--; render(); hl('st-code',[6]);
+    setMsg('st-msg',`<b>pop()</b>：回傳 stack[${top+1}] = ${v}，然後 top 減 1 變成 ${top}。`);
+  };
+  $('#st-peek').onclick=()=>{
+    if(top===-1){ setMsg('st-msg','空堆疊，沒有東西可以看。','bad'); return; }
+    hl('st-code',[]); setMsg('st-msg',`<b>peek()</b>：頂端是 ${arr[top]}，只看不拿，top 不變（${top}）。`);
+  };
+  $('#st-reset').onclick=reset; reset();
+})();
+
+/* ---------- 直線佇列 ---------- */
+(function(){
+  const MAX=6; let arr, front, rear;
+  const CODE=['void add(int v) {','  if (rear == MAX-1) { /* 滿 */ }','  else queue[++rear] = v;','}','int delete() {','  if (front == rear) { /* 空 */ }','  else return queue[++front];','}'];
+  $('#q-code').innerHTML=codeHTML(CODE);
+  function reset(){ arr=Array(MAX).fill(null); front=-1; rear=-1; render(); hl('q-code',[]); setMsg('q-msg','按 add 試試看。'); }
+  function render(){
+    let h='';
+    for(let i=-1;i<MAX;i++){
+      let cls='cell nil', txt='起點';
+      if(i>=0){
+        txt=arr[i]?arr[i].v:'';
+        cls='cell'+(arr[i]&&i>front&&i<=rear?' on':'')+(arr[i]&&i<=front?' gone':'');
+      }
+      h+=`<div class="qcol"><span class="idx">${i}</span><div class="${cls}">${txt}</div><div class="tags">${i===front?'<span class="tag f">front</span>':''}${i===rear?'<span class="tag r">rear</span>':''}</div></div>`;
+    }
+    $('#q-view').innerHTML=h;
+    const emp=front===rear, full=rear===MAX-1;
+    $('#q-badges').innerHTML=`<span class="badge">front = ${front}</span><span class="badge">rear = ${rear}</span><span class="badge ${emp?'yes':''}">is_empty: ${emp}</span><span class="badge ${full?'yes':''}">is_full: ${full}</span>`;
+  }
+  function add(v,silent){
+    if(rear===MAX-1){
+      if(!silent){ hl('q-code',[1]); const w=front+1; setMsg('q-msg',`rear == MAX-1，佇列已滿。`+(w>0?`<br>但前面其實有 <b>${w}</b> 格已經空了，卻用不到。這就是直線佇列的缺點。`:''),'bad'); }
+      return false;
+    }
+    rear++; arr[rear]={v}; if(!silent){ render(); hl('q-code',[2]); setMsg('q-msg',`<b>add(${v})</b>：rear 先加 1 變成 ${rear}，再把 ${v} 放進 queue[${rear}]。`); }
+    return true;
+  }
+  function del(silent){
+    if(front===rear){ if(!silent){ hl('q-code',[5]); setMsg('q-msg','front == rear，佇列是空的，不能 delete。','bad'); } return; }
+    front++; const v=arr[front].v; if(!silent){ render(); hl('q-code',[6]); setMsg('q-msg',`<b>delete()</b>：front 先加 1 變成 ${front}，回傳 queue[${front}] = ${v}。`); }
+  }
+  $('#q-add').onclick=()=>{ const v=readVal('q-val'); if(add(v)){ $('#q-val').value=rnd(); } };
+  $('#q-del').onclick=()=>del();
+  $('#q-peek').onclick=()=>{
+    if(front===rear){ setMsg('q-msg','空佇列，沒有東西可以看。','bad'); return; }
+    hl('q-code',[]); setMsg('q-msg',`<b>peek()</b>：前端是 queue[${front+1}] = ${arr[front+1].v}，只看不拿，front 不變。`);
+  };
+  $('#q-reset').onclick=reset;
+  $('#q-demo').onclick=()=>{
+    reset(); for(let i=1;i<=MAX;i++)add(i*10,true); for(let i=0;i<MAX;i++)del(true); render(); hl('q-code',[1]);
+    setMsg('q-msg',`先 add 6 次，再 delete 6 次。現在 front = rear = ${rear}：<br><b>is_empty 是 true，is_full 也是 true</b>。佇列裡沒有資料，卻一筆都加不進去。這就是要用環狀佇列的原因。`,'bad');
+  };
+  reset();
+})();
+
+/* ---------- 環狀佇列 ---------- */
+(function(){
+  const MAX=6; let arr, front, rear;
+  const norm=x=>((x%MAX)+MAX)%MAX;
+  const CODE=['void add(int v) {','  if ((rear+1) % MAX == front) { /* 滿 */ }','  else { rear = (rear+1) % MAX;  queue[rear] = v; }','}','int delete() {','  if (front == rear) { /* 空 */ }','  else { front = (front+1) % MAX;  return queue[front]; }','}'];
+  $('#r-code').innerHTML=codeHTML(CODE);
+  const isEmpty=()=>norm(front)===norm(rear), isFull=()=>norm(rear+1)===norm(front);
+  const size=()=>norm(rear)-norm(front)<0?norm(rear)-norm(front)+MAX:norm(rear)-norm(front);
+  function reset(){ arr=Array(MAX).fill(null); front=-1; rear=-1; render(); hl('r-code',[]); setMsg('r-msg','按 add 試試看。'); }
+  function render(){
+    const cx=170, cy=170, R=100, rr=27; let s='';
+    const fpos=norm(front), rpos=norm(rear);
+    for(let i=0;i<MAX;i++){
+      const a=(-90+i*60)*Math.PI/180, x=cx+R*Math.cos(a), y=cy+R*Math.sin(a);
+      const inData=arr[i]&&i!==fpos&&((i-fpos+MAX)%MAX)<=size()&&size()>0&&((i-fpos+MAX)%MAX)!==0;
+      let cls='s-slot';
+      if(inData) cls+=' s-data'; else if(arr[i]) cls+=' s-gone';
+      if(i===fpos&&!inData) cls+=' s-res';
+      s+=`<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rr}"/>`;
+      if(arr[i]) s+=`<text class="t-v" x="${x.toFixed(1)}" y="${y.toFixed(1)}" ${inData?'':'style="opacity:.45"'}>${arr[i].v}</text>`;
+      const lx=cx+(R+46)*Math.cos(a), ly=cy+(R+46)*Math.sin(a);
+      s+=`<text class="t-idx" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}">${i}</text>`;
+      const pr=R-46, px=cx+pr*Math.cos(a), py=cy+pr*Math.sin(a);
+      const both=i===fpos&&i===rpos;
+      if(i===fpos) s+=`<text class="t-f" x="${px.toFixed(1)}" y="${(py-(both?8:0)).toFixed(1)}">front${front===-1?'(-1)':''}</text>`;
+      if(i===rpos) s+=`<text class="t-r" x="${px.toFixed(1)}" y="${(py+(both?8:0)).toFixed(1)}">rear${rear===-1?'(-1)':''}</text>`;
+    }
+    s+=`<text class="t-c" x="${cx}" y="${cy-6}">${size()} / ${MAX-1}</text><text class="t-c" x="${cx}" y="${cy+12}">筆資料</text>`;
+    $('#r-svg').innerHTML=s;
+    $('#r-badges').innerHTML=`<span class="badge">front = ${front}</span><span class="badge">rear = ${rear}</span><span class="badge ${isEmpty()?'yes':''}">空 front==rear: ${isEmpty()}</span><span class="badge ${isFull()?'yes':''}">滿 (rear+1)%MAX==front: ${isFull()}</span>`;
+  }
+  function add(v,silent){
+    if(isFull()){ if(!silent){ hl('r-code',[1]); setMsg('r-msg',`(rear+1) % ${MAX} = ${norm(rear+1)}，等於 front 的位置 ${norm(front)}，佇列已滿。<br>只放了 ${MAX-1} 筆，最後一格要留空，不然「滿」和「空」會分不出來。`,'bad'); } return false; }
+    rear=(rear+1)%MAX; arr[rear]={v};
+    if(!silent){ render(); hl('r-code',[2]); setMsg('r-msg',`<b>add(${v})</b>：rear = (rear+1) % ${MAX} = ${rear}，把 ${v} 放進 queue[${rear}]。`); }
+    return true;
+  }
+  function del(silent){
+    if(isEmpty()){ if(!silent){ hl('r-code',[5]); setMsg('r-msg','front == rear，佇列是空的。','bad'); } return; }
+    front=(front+1)%MAX; const v=arr[front].v;
+    if(!silent){ render(); hl('r-code',[6]); setMsg('r-msg',`<b>delete()</b>：front = (front+1) % ${MAX} = ${front}，回傳 queue[${front}] = ${v}。`); }
+  }
+  $('#r-add').onclick=()=>{ const v=readVal('r-val'); if(add(v))$('#r-val').value=rnd(); };
+  $('#r-del').onclick=()=>del();
+  $('#r-reset').onclick=reset;
+  $('#r-demo').onclick=()=>{
+    reset(); for(let i=1;i<=5;i++)add(i*10,true); for(let i=0;i<3;i++)del(true); add(60,true); add(70,true); render(); hl('r-code',[2]);
+    setMsg('r-msg',`先 add 5 次、delete 3 次，再 add 2 次。rear 走到 5 之後繞回 0，資料住在 3、4、5、0 這四格。<br>直線佇列在 rear 到 5 時就「滿」了，環狀佇列還能繼續用。再按 add 看看什麼時候真的滿（最多 5 筆）。`);
+  };
+  reset();
+})();
+
+/* ---------- 中序轉後序 ---------- */
+const PREC={'+':[12,12],'-':[12,12],'*':[13,13],'/':[13,13],'%':[13,13],'^':[14,15],'$':[14,15],'(':[0,20]};
+function tokenizeInfix(s){ return s.match(/\d+(?:\.\d+)?|[A-Za-z]|[-+*\/%^$()]/g)||[]; }
+function convSteps(tokens){
+  const steps=[], stack=[], out=[]; let k=0;
+  const snap=(i,msg,err)=>steps.push({i,k,stack:stack.slice(),out:out.slice(),msg,err});
+  let bal=0; for(const t of tokens){ if(t==='(')bal++; if(t===')'){bal--; if(bal<0)break;} }
+  if(bal!==0){ snap(-1,'括號沒有成對，請檢查式子。',true); return steps; }
+  snap(-1,'開始：堆疊和輸出都是空的。從左到右一個一個讀詞元。');
+  tokens.forEach((t,i)=>{
+    k=i+1;
+    if(t==='('){ stack.push(t); snap(i,'「(」是左括號，直接 push。'); }
+    else if(t===')'){
+      const popped=[]; while(stack.length&&stack[stack.length-1]!=='('){ const o=stack.pop(); out.push(o); popped.push(o); }
+      stack.pop();
+      snap(i,'「)」是右括號：一路 pop 到遇見「(」。'+(popped.length?`彈出並輸出 <b>${popped.join(' ')}</b>。`:'沒有運算子要輸出。')+'左括號丟掉，不輸出。');
+    } else if(PREC[t]){
+      const icp=PREC[t][1]; const notes=[];
+      while(stack.length){
+        const top=stack[stack.length-1], isp=PREC[top][0];
+        if(isp>=icp){ notes.push(`ISP(${top})=${isp} ≥ ICP(${t})=${icp}，先輸出 ${top}`); out.push(stack.pop()); }
+        else { notes.push(`ISP(${top})=${isp} &lt; ICP(${t})=${icp}，停止`); break; }
+      }
+      if(!notes.length) notes.push('堆疊是空的');
+      stack.push(t);
+      snap(i,`運算子「${esc(t)}」(ICP=${icp})：${notes.join('；')}。最後把「${esc(t)}」push。`);
+    } else { out.push(t); snap(i,`「${esc(t)}」是運算元，直接輸出。`); }
+  });
+  k=tokens.length;
+  const rest=[]; while(stack.length){ const o=stack.pop(); out.push(o); rest.push(o); }
+  snap(-2,'詞元讀完。把堆疊裡剩下的運算子由頂端開始全部 pop 輸出'+(rest.length?`：<b>${rest.join(' ')}</b>。`:'（沒有剩下的）。')+`<br>後序式：<b>${out.join(' ')}</b>`);
+  return steps;
+}
+(function(){
+  let tokens=[], steps=[], cur=0;
+  const PRE=['5+(3*4)-9','1*2+3*(4+5)','(A+B)*C-D/E','A+B*C','A*B+C','A+B+C','2^3^2'];
+  $('#cv-presets').innerHTML=PRE.map(p=>`<button class="chip" data-p="${esc(p)}">${esc(p)}</button>`).join('');
+  function build(){ tokens=tokenizeInfix($('#cv-in').value); steps=convSteps(tokens); cur=0; render(); }
+  function render(){
+    const s=steps[cur];
+    $('#cv-tokens').innerHTML=tokens.length?tokens.map((t,i)=>`<span class="tok ${s.i===i?'cur':''} ${(s.i>=0&&i<s.i)||s.i===-2?'done':''}">${esc(t)}</span>`).join(''):'<span class="empty">請輸入運算式</span>';
+    $('#cv-stack').innerHTML=s.stack.length?s.stack.map((t,i)=>`<span class="tok ${i===s.stack.length-1?'top':''}">${esc(t)}</span>`).join(''):'<span class="empty">（空）</span>';
+    $('#cv-out').innerHTML=s.out.length?s.out.map(t=>`<span class="tok">${esc(t)}</span>`).join(''):'<span class="empty">（空）</span>';
+    setMsg('cv-msg',s.msg,s.err?'bad':(cur===steps.length-1?'good':''));
+    $('#cv-count').textContent=`第 ${cur} / ${steps.length-1} 步`;
+    $('#cv-prev').disabled=cur===0; $('#cv-next').disabled=cur>=steps.length-1;
+  }
+  $('#cv-go').onclick=build; $('#cv-in').addEventListener('keydown',e=>{ if(e.key==='Enter')build(); });
+  $('#cv-presets').onclick=e=>{ const b=e.target.closest('button'); if(b){ $('#cv-in').value=b.dataset.p; build(); } };
+  $('#cv-prev').onclick=()=>{ if(cur>0){cur--;render();} };
+  $('#cv-next').onclick=()=>{ if(cur<steps.length-1){cur++;render();} };
+  $('#cv-reset').onclick=()=>{ cur=0; render(); };
+  makePlayer($('#cv-play'),()=>cur<steps.length-1,()=>{cur++;render();},1100);
+  build();
+})();
+
+/* ---------- 求值 ---------- */
+(function(){
+  const OPS=/^[-+*\/%^$]$/;
+  const fmt=n=>Number.isInteger(n)?String(n):String(+n.toFixed(4));
+  function calc(a,o,b){ switch(o){case'+':return a+b;case'-':return a-b;case'*':return a*b;case'/':return a/b;case'%':return a%b;default:return Math.pow(a,b);} }
+  function evalSteps(tokens,mode){
+    const order=tokens.map((t,i)=>i); if(mode==='pre')order.reverse();
+    const steps=[], st=[]; let k=0;
+    const snap=(i,msg,err)=>steps.push({i,k,stack:st.slice(),msg,err});
+    snap(-1,mode==='post'?'從左到右讀取。數字 push；遇到運算子就 pop 兩個數運算，再把結果 push 回去。':'從<b>右到左</b>讀取。數字 push；遇到運算子就 pop 兩個數運算，再把結果 push 回去。');
+    if(!tokens.length){ snap(-1,'請輸入運算式。',true); return steps; }
+    for(const i of order){
+      k++; const t=tokens[i];
+      if(OPS.test(t)){
+        if(st.length<2){ snap(i,`遇到「${esc(t)}」但堆疊裡不到兩個數，這個式子不合法。`,true); return steps; }
+        let a,b,why;
+        if(mode==='post'){ b=st.pop(); a=st.pop(); why=`先 pop 出 <b>${fmt(b)}</b>（右邊），再 pop 出 <b>${fmt(a)}</b>（左邊）`; }
+        else { a=st.pop(); b=st.pop(); why=`先 pop 出 <b>${fmt(a)}</b>（左邊），再 pop 出 <b>${fmt(b)}</b>（右邊）`; }
+        if((t==='/'||t==='%')&&b===0){ snap(i,'除數是 0，無法計算。',true); return steps; }
+        const r=calc(a,t,b); st.push(r);
+        snap(i,`「${esc(t)}」是運算子：${why}。<br>算 ${fmt(a)} ${esc(t)} ${fmt(b)} = <b>${fmt(r)}</b>，push 回堆疊。`);
+      } else {
+        const n=Number(t);
+        if(!isFinite(n)){ snap(i,`「${esc(t)}」不是數字，這裡只能算數字。`,true); return steps; }
+        st.push(n); snap(i,`${fmt(n)} 是數字，push。`);
+      }
+    }
+    if(st.length===1) snap(-2,`全部讀完，堆疊只剩一個數，答案是 <b>${fmt(st[0])}</b>。`);
+    else snap(-2,'讀完後堆疊剩下不只一個數，式子不合法。',true);
+    return steps;
+  }
+  const PRESETS={post:['5 3 4 * + 9 -','1 2 * 3 4 5 + * +','2 4 8 * 2 / + 1 -','6 2 3 + - 3 8 2 / + * 2 $ 3 +','10 2 / 3 -'],pre:['- + 2 / * 4 8 2 1','+ * 1 2 * 3 + 4 5','- 10 3']};
+  let mode='post', tokens=[], steps=[], cur=0;
+  function presets(){ $('#ev-presets').innerHTML=PRESETS[mode].map(p=>`<button class="chip" data-p="${esc(p)}">${esc(p)}</button>`).join(''); }
+  function build(){ tokens=$('#ev-in').value.trim().split(/\s+/).filter(Boolean); steps=evalSteps(tokens,mode); cur=0; render(); }
+  function render(){
+    const s=steps[cur];
+    const order=tokens.map((t,i)=>i); if(mode==='pre')order.reverse();
+    const doneSet=new Set(order.slice(0,s.k));
+    $('#ev-tokens').innerHTML=tokens.length?tokens.map((t,i)=>`<span class="tok ${s.i===i?'cur':''} ${s.i!==i&&doneSet.has(i)?'done':''}">${esc(t)}</span>`).join(''):'<span class="empty">請輸入運算式</span>';
+    $('#ev-stack').innerHTML=s.stack.length?s.stack.map((t,i)=>`<span class="tok ${i===s.stack.length-1?'top':''}">${fmt(t)}</span>`).join(''):'<span class="empty">（空）</span>';
+    setMsg('ev-msg',s.msg,s.err?'bad':(cur===steps.length-1?'good':''));
+    $('#ev-count').textContent=`第 ${cur} / ${steps.length-1} 步`;
+    $('#ev-prev').disabled=cur===0; $('#ev-next').disabled=cur>=steps.length-1;
+  }
+  document.querySelectorAll('input[name=ev-mode]').forEach(r=>r.addEventListener('change',()=>{ mode=r.value; presets(); $('#ev-in').value=PRESETS[mode][0]; build(); }));
+  $('#ev-go').onclick=build; $('#ev-in').addEventListener('keydown',e=>{ if(e.key==='Enter')build(); });
+  $('#ev-presets').onclick=e=>{ const b=e.target.closest('button'); if(b){ $('#ev-in').value=b.dataset.p; build(); } };
+  $('#ev-prev').onclick=()=>{ if(cur>0){cur--;render();} };
+  $('#ev-next').onclick=()=>{ if(cur<steps.length-1){cur++;render();} };
+  $('#ev-reset').onclick=()=>{ cur=0; render(); };
+  makePlayer($('#ev-play'),()=>cur<steps.length-1,()=>{cur++;render();},1000);
+  presets(); build();
+})();
+
+/* ---------- 迷宮 ---------- */
+(function(){
+  const M=[[1,1,1,1,1,1],[0,0,0,0,1,1],[1,0,1,1,0,1],[1,0,0,1,0,1],[1,0,0,0,0,0],[1,1,1,1,1,1]];
+  const DI=[-1,0,1,0], DJ=[0,1,0,-1], DN=['上','右','下','左'];
+  let pos, visited, path, stack, done, steps;
+  function reset(){ pos=[1,0]; visited=new Set(['1,0']); path=[[1,0]]; stack=[]; done=false; steps=0; render(); setMsg('mz-msg','老鼠在入口 (1,0)。按「下一步」開始探路。'); }
+  function render(){
+    let g='';
+    for(let i=0;i<6;i++)for(let j=0;j<6;j++){
+      const key=i+','+j; let c='mc', t='';
+      if(M[i][j]===1)c+=' w';
+      else if(pos[0]===i&&pos[1]===j){c+=' cur'; t='🐭';}
+      else if(path.some(p=>p[0]===i&&p[1]===j))c+=' path';
+      else if(visited.has(key))c+=' dead';
+      if(i===4&&j===5){c+=' ex'; if(!t)t='出';}
+      if(i===1&&j===0&&!t)t='入';
+      g+=`<div class="${c}" title="(${i},${j})">${t}</div>`;
+    }
+    $('#mz-grid').innerHTML=g;
+    $('#mz-stack').innerHTML=stack.length?stack.slice().reverse().map((e,idx)=>`<div class="srow" style="grid-template-columns:minmax(0,1fr)"><div class="cell ${idx===0?'on':''}" style="height:auto;padding:4px 8px;justify-items:start">路口 (${e.pos[0]},${e.pos[1]}) → 方向 ${e.d}（${DN[e.d]}）${idx===0?' ◀ top':''}</div></div>`).join(''):'<div class="empty">（堆疊是空的）</div>';
+    $('#mz-count').textContent=`已走 ${steps} 步`;
+    $('#mz-next').disabled=done;
+  }
+  function move(e){ const ni=e.pos[0]+DI[e.d], nj=e.pos[1]+DJ[e.d]; pos=[ni,nj]; visited.add(ni+','+nj); path.push([ni,nj]); }
+  function step(){
+    if(done)return; steps++;
+    const [i,j]=pos;
+    if(i===4&&j===5){ done=true; render(); setMsg('mz-msg','到達出口 A[4,5]！藍色那條路就是答案。','good'); return; }
+    const cand=[], notes=[];
+    for(let d=0;d<4;d++){
+      const ni=i+DI[d], nj=j+DJ[d];
+      if(ni<0||nj<0||ni>5||nj>5) notes.push(`${DN[d]}${d}：超出邊界`);
+      else if(M[ni][nj]===1) notes.push(`${DN[d]}${d}：(${ni},${nj}) 是 1，不能走`);
+      else if(visited.has(ni+','+nj)) notes.push(`${DN[d]}${d}：(${ni},${nj}) 是來時路，不用測`);
+      else { notes.push(`${DN[d]}${d}：(${ni},${nj}) 是 0，可以走`); cand.push(d); }
+    }
+    const head=`在 (${i},${j}) 測試四個方向：<br>${notes.join('<br>')}<br>`;
+    if(cand.length){
+      for(let k=cand.length-1;k>=0;k--) stack.push({pos:[i,j],d:cand[k]});
+      const e=stack.pop(); move(e); render();
+      setMsg('mz-msg',head+`把方向 <b>${cand.join('、')}</b> push 進堆疊，再 pop 出方向 <b>${e.d}（${DN[e.d]}）</b>前進。`+(cand.length>1?'其餘方向留在堆疊裡，回頭時再走。':''));
+    } else {
+      let e=null; while(stack.length){ const c=stack.pop(); if(!visited.has((c.pos[0]+DI[c.d])+','+(c.pos[1]+DJ[c.d]))){e=c;break;} }
+      if(!e){ done=true; render(); setMsg('mz-msg',head+'無路可走，堆疊也空了，這個迷宮沒有出口。','bad'); return; }
+      while(path.length&&!(path[path.length-1][0]===e.pos[0]&&path[path.length-1][1]===e.pos[1]))path.pop();
+      pos=e.pos; move(e); render();
+      setMsg('mz-msg',head+`<b>死路！</b>pop 堆疊，回到路口 (${e.pos[0]},${e.pos[1]})，改走留下來的方向 <b>${e.d}（${DN[e.d]}）</b>。這就是回溯。`,'bad');
+    }
+  }
+  $('#mz-next').onclick=step; $('#mz-reset').onclick=()=>{ stops.forEach(f=>f()); reset(); };
+  makePlayer($('#mz-play'),()=>!done,step,800);
+  reset();
+})();
+
+/* ---------- 合法序列 ---------- */
+(function(){
+  function check(n,out){
+    const st=[]; let nxt=1; const ops=[];
+    for(const x of out){
+      if(st.includes(x)){
+        if(st[st.length-1]!==x) return {ok:false,ops,why:`要輸出 <b>${x}</b>，但堆疊頂端是 <b>${st[st.length-1]}</b>。${x} 被壓在下面，要先把上面的彈出，那些數字就會比 ${x} 早輸出，順序對不上。`};
+      } else {
+        if(x<nxt||x>n) return {ok:false,ops,why:`${x} 已經輸出過，或不在 1 到 ${n} 之間。`};
+        while(nxt<=x){ st.push(nxt); ops.push('push '+nxt); nxt++; }
+      }
+      st.pop(); ops.push('pop → '+x);
+    }
+    return {ok:true,ops};
+  }
+  function perms(n){ const res=[]; (function go(cur,rest){ if(!rest.length){res.push(cur);return;} rest.forEach((x,i)=>go(cur.concat(x),rest.slice(0,i).concat(rest.slice(i+1)))); })([],Array.from({length:n},(_,i)=>i+1)); return res; }
+  function parse(s,n){ const parts=/[\s,]/.test(s.trim())?s.trim().split(/[\s,]+/):s.trim().split(''); const a=parts.map(Number); const ok=a.length===n&&new Set(a).size===n&&a.every(x=>Number.isInteger(x)&&x>=1&&x<=n); return ok?a:null; }
+  function run(){
+    const n=+$('#vl-n').value, a=parse($('#vl-out').value,n);
+    if(!a){ setMsg('vl-msg',`請輸入 1 到 ${n} 的一個排列，例如 ${Array.from({length:n},(_,i)=>i+1).join(' ')}。`,'bad'); $('#vl-ops').innerHTML=''; return; }
+    const r=check(n,a);
+    $('#vl-ops').innerHTML=r.ops.map(o=>`<span class="tok ${o.startsWith('pop')?'cur':''}">${o}</span>`).join('')||'<span class="empty">（無）</span>';
+    setMsg('vl-msg',r.ok?`<b>${a.join(' ')}</b> 是合法的出入序列，操作如下。`:`<b>${a.join(' ')}</b> 不可能。${r.why}`,r.ok?'good':'bad');
+  }
+  function all(){
+    const n=+$('#vl-n').value, ps=perms(n); let ok=0;
+    $('#vl-all').innerHTML=ps.map(p=>{ const r=check(n,p).ok; if(r)ok++; return `<button class="perm ${r?'ok':'no'}" data-p="${p.join(' ')}">${p.join(' ')}</button>`; }).join('');
+    $('#vl-count').textContent=` 　合法 ${ok} 個，不合法 ${ps.length-ok} 個（綠色合法，紅色不合法）`;
+  }
+  $('#vl-go').onclick=run; $('#vl-out').addEventListener('keydown',e=>{ if(e.key==='Enter')run(); });
+  $('#vl-n').onchange=()=>{ const n=+$('#vl-n').value; $('#vl-out').value=Array.from({length:n},(_,i)=>i+1).join(' '); all(); run(); };
+  $('#vl-all').onclick=e=>{ const b=e.target.closest('button'); if(b){ $('#vl-out').value=b.dataset.p; run(); } };
+  all(); run();
+})();
+
+/* ---------- 小測驗 ---------- */
+(function(){
+  const Q=[
+    {q:'依序 push 1、2、3 再 pop 一次，回傳的是？',o:['1','2','3','不一定'],a:2,w:'堆疊是後進先出，最後放進去的 3 最先出來。'},
+    {q:'陣列堆疊（課本定義）一開始 top 的值是多少？判斷「空」的條件是什麼？',o:['top = 0，top == 0','top = -1，top == -1','top = -1，top == MAX-1','top = 0，top == MAX'],a:1,w:'top 指向最上面那筆資料，空堆疊沒有資料所以是 -1。滿才是 top == MAX-1。'},
+    {q:'後序式 <code>5 3 4 * + 9 -</code> 的值是？',o:['8','17','-4','12'],a:0,w:'3*4=12；5+12=17；17-9=8。減法是「17 − 9」，次上層減頂端。'},
+    {q:'後序式 <code>10 2 / 3 -</code> 的值是？',o:['-2','2','5','-5'],a:1,w:'10/2=5，5−3=2。遇到運算子先 pop 的是右運算元，所以是 10÷2 而不是 2÷10。'},
+    {q:'前序式 <code>- + 2 / * 4 8 2 1</code> 的值是？',o:['17','15','19','16'],a:0,w:'從右往左：4*8=32，32/2=16，2+16=18，18−1=17。'},
+    {q:'中序式 <code>(A+B)*C-D/E</code> 轉後序是？',o:['AB+C*DE/-','AB+CDE/*-','ABC+*DE/-','AB+C*D/E-'],a:0,w:'(A+B)→AB+；再乘 C→AB+C*；D/E→DE/；最後相減→AB+C*DE/-。'},
+    {q:'中序轉後序時，堆疊頂端是 +，新進來的是 *，應該怎麼做？',o:['先輸出 +，再 push *','直接 push *，不彈出','把 + 丟掉','兩個都輸出'],a:1,w:'ISP(+)=12 &lt; ICP(*)=13，不彈出，直接 push。乘除先算，所以要留在 + 上面。'},
+    {q:'MAX = 8 的環狀佇列，最多能放幾筆資料？',o:['8','7','9','6'],a:1,w:'空和滿的條件都是 front == rear，必須空一格區分，所以是 MAX−1 = 7。'},
+    {q:'直線陣列佇列中，front == rear 表示？',o:['佇列已滿','佇列為空','只剩一筆資料','front 與 rear 設錯'],a:1,w:'front 指在第一筆資料的前一格，和 rear 重合就代表沒有資料。'},
+    {q:'鏈結串列實作的佇列，delete 掉最後一個節點後，必須做什麼？',o:['front 設 NULL，rear 不用管','rear 也要設成 NULL','free 掉 rear 兩次','什麼都不用做'],a:1,w:'front 移到 NULL 時，rear 還指著已被 free 的節點，必須設成 NULL，否則下次 add 會出錯。'},
+    {q:'輸入順序 1 2 3 的堆疊，下列哪個輸出不可能？',o:['1 2 3','3 2 1','2 1 3','3 1 2'],a:3,w:'3 先出來時，1、2 還在堆疊裡且 2 在上面，所以只能是 3 2 1，不可能是 3 1 2。'},
+    {q:'迷宮問題中，堆疊裡存的是什麼？',o:['已經走過的格子','出口的位置','還沒嘗試的方向（在路口）','牆的位置'],a:2,w:'走到死路時 pop 回上一個路口，再走留下來的方向，這就是回溯。'},
+    {q:'依序做 add(A), delete, add(B), add(C), add(D), delete, delete, add(E)，最後佇列從前到後是？',o:['D E','C D E','E','B C D E'],a:0,w:'三次 delete 依序移除 A、B、C，剩下 D，再加入 E，所以是 D E。'},
+    {q:'遞迴函數在系統裡怎麼處理？',o:['用佇列','用堆疊，和一般副程式呼叫一樣','用陣列排序','不需要額外記憶'],a:1,w:'遞迴是副程式呼叫的特例，每次呼叫把呼叫者的變數 push 進系統堆疊，return 時 pop 回來。'}
+  ];
+  let i=0, score=0, answered=false;
+  function render(){
+    const el=$('#qz');
+    if(i>=Q.length){
+      const pct=Math.round(score/Q.length*100);
+      el.innerHTML=`<h2>完成了</h2><p style="font-size:22px"><b>${score} / ${Q.length}</b>（${pct}%）</p><p>${pct>=80?'很穩。可以回頭看看答錯的那幾個主題再確認一次。':'錯的題目建議回到對應的分頁再操作一遍，特別是運算式求值和環狀佇列。'}</p><button class="btn primary" id="qz-again">再做一次</button>`;
+      $('#qz-again').onclick=()=>{ i=0; score=0; render(); };
+      return;
+    }
+    answered=false; const q=Q[i];
+    el.innerHTML=`<div class="prog"><i style="width:${i/Q.length*100}%"></i></div><h4>第 ${i+1} / ${Q.length} 題</h4><h3>${q.q}</h3><div id="qz-opts">${q.o.map((t,k)=>`<button class="btn opt" data-k="${k}">${t}</button>`).join('')}</div><div id="qz-fb"></div>`;
+    $('#qz-opts').onclick=e=>{
+      const b=e.target.closest('button'); if(!b||answered)return; answered=true;
+      const k=+b.dataset.k, ok=k===q.a; if(ok)score++;
+      document.querySelectorAll('#qz-opts .opt').forEach(x=>{ x.disabled=true; if(+x.dataset.k===q.a)x.classList.add('right'); else if(x===b)x.classList.add('wrong'); });
+      $('#qz-fb').innerHTML=`<div class="msg ${ok?'good':'bad'}"><b>${ok?'答對了。':'答錯了。'}</b>${q.w}</div><button class="btn primary" id="qz-next">${i===Q.length-1?'看結果':'下一題 ▶'}</button>`;
+      $('#qz-next').onclick=()=>{ i++; render(); };
+    };
+  }
+  render();
+})();
+
+route();
+})();
+</script>
+
+</body></html>
